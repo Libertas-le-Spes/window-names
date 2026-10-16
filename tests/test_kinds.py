@@ -14,7 +14,7 @@ from window_names.window import Window
 
 
 def window(app_class: str, title: str, pid: int = 0) -> Window:
-    return Window(address="0x1", app_class=app_class, title=title, pid=pid)
+    return Window(id="0x1", app_class=app_class, title=title, pid=pid)
 
 
 class TerminalsTest(unittest.TestCase):

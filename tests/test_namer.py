@@ -2,12 +2,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from window_names.desktops.sent_texts import SentTexts
 from window_names.given_names import GivenNames
 from window_names.namer import Namer
 from window_names.service import Service
 from window_names.window import Window
 
-WINDOW = Window(address="0xabc", app_class="foot", title="t", pid=1)
+WINDOW = Window(id="0xabc", app_class="foot", title="t", pid=1)
 
 
 class Everything:
@@ -16,6 +17,19 @@ class Everything:
 
     def name(self, window):
         return "default"
+
+
+class FakeDesktop:
+    def __init__(self, windows):
+        self.open = windows
+        self.shown = []
+
+    def windows(self):
+        return self.open
+
+    def show_text(self, window_id, text):
+        self.shown.append((window_id, text))
+        return True
 
 
 class NamerTest(unittest.TestCase):
@@ -27,49 +41,42 @@ class NamerTest(unittest.TestCase):
 
     def test_hand_beats_tools_beats_default(self):
         self.assertEqual(self.namer.text_for(WINDOW), "default")
-        self.by_tools.give(WINDOW.address, "Rider Main")
+        self.by_tools.give(WINDOW.id, "Rider Main")
         self.assertEqual(self.namer.text_for(WINDOW), "Rider Main")
-        self.by_hand.give(WINDOW.address, "My review")
+        self.by_hand.give(WINDOW.id, "My review")
         self.assertEqual(self.namer.text_for(WINDOW), "My review")
 
-    def test_a_closed_window_loses_its_names(self):
-        self.by_tools.give(WINDOW.address, "Rider Main")
-        self.by_hand.give(WINDOW.address, "My review")
-        service = Service(FakeHyprland([WINDOW]), self.namer)
-        service.on_event("closewindow>>abc")
+    def test_a_window_that_closes_loses_its_names(self):
+        desktop = FakeDesktop([WINDOW])
+        service = Service(desktop, self.namer)
+        service.refresh()
+        self.by_tools.give(WINDOW.id, "Rider Main")
+        self.by_hand.give(WINDOW.id, "My review")
+        desktop.open = []
+        service.refresh()
         self.assertEqual(self.namer.text_for(WINDOW), "default")
 
-
-class FakeHyprland:
-    def __init__(self, windows):
-        self._windows = windows
-        self.shown = []
-        self.has_bars = True
-
-    def windows(self):
-        return self._windows
-
-    def show_text(self, address, text):
-        self.shown.append((address, text))
-        return self.has_bars
+    def test_every_open_window_is_offered_its_text(self):
+        desktop = FakeDesktop([WINDOW])
+        Service(desktop, self.namer).refresh()
+        self.assertEqual(desktop.shown, [("0xabc", "default")])
 
 
-class ServiceTest(unittest.TestCase):
-    def test_text_is_sent_once_and_again_after_it_changes(self):
-        names = GivenNames(Path(tempfile.mkdtemp()))
-        hyprland = FakeHyprland([WINDOW])
-        service = Service(hyprland, Namer([names], [Everything()]))
-        service.refresh()
-        service.refresh()
-        names.give(WINDOW.address, "Chat")
-        service.refresh()
-        self.assertEqual(hyprland.shown, [("0xabc", "default"), ("0xabc", "Chat")])
+class SentTextsTest(unittest.TestCase):
+    def test_text_is_sent_once_and_again_after_it_changes_or_fails(self):
+        sent, sent_texts = [], SentTexts()
+        works = [False, True, True]
+        sender = lambda window_id, text: sent.append(text) or works.pop(0)
+        sent_texts.send("w", "Chat", sender)
+        sent_texts.send("w", "Chat", sender)
+        sent_texts.send("w", "Chat", sender)
+        sent_texts.send("w", "GitLab", sender)
+        self.assertEqual(sent, ["Chat", "Chat", "GitLab"])
 
-    def test_text_is_retried_while_the_bars_are_not_loaded(self):
-        hyprland = FakeHyprland([WINDOW])
-        hyprland.has_bars = False
-        service = Service(hyprland, Namer([], [Everything()]))
-        service.refresh()
-        hyprland.has_bars = True
-        service.refresh()
-        self.assertEqual(len(hyprland.shown), 2)
+    def test_a_closed_window_is_forgotten(self):
+        sent, sent_texts = [], SentTexts()
+        sender = lambda window_id, text: sent.append(text) or True
+        sent_texts.send("w", "Chat", sender)
+        sent_texts.keep_only(set())
+        sent_texts.send("w", "Chat", sender)
+        self.assertEqual(sent, ["Chat", "Chat"])

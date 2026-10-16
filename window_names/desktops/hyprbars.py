@@ -1,14 +1,16 @@
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from .hyprland import Hyprland
+if TYPE_CHECKING:
+    from .hyprland import Hyprland
 
 HYPRBARS = Path.home() / "RiderProjects/hyprland-plugins/hyprbars"
 HYPRLAND = Path("/usr/bin/Hyprland")
 
 
-class TitleBars:
-    def __init__(self, hyprland: Hyprland, source: Path = HYPRBARS, compositor: Path = HYPRLAND):
+class Hyprbars:
+    def __init__(self, hyprland: "Hyprland", source: Path = HYPRBARS, compositor: Path = HYPRLAND):
         self._hyprland = hyprland
         self._source = source
         self._compositor = compositor
@@ -19,9 +21,9 @@ class TitleBars:
 
     def load(self) -> None:
         if self._outdated() and not self._build():
-            self._hyprland.notify("Title bars could not be rebuilt for this Hyprland version. Run: make -C " + str(self._source))
+            self._hyprland.ask(f"notify 3 15000 0 Title bars could not be rebuilt for this Hyprland version. Run: make -C {self._source}")
             return
-        self._hyprland.load_plugin(self.plugin)
+        self._hyprland.ask(f"plugin load {self.plugin}")
 
     def _outdated(self) -> bool:
         return not self.plugin.exists() or self.plugin.stat().st_mtime < self._compositor.stat().st_mtime

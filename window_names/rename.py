@@ -1,26 +1,25 @@
-from collections.abc import Callable
-
+from .desktops.desktop import Desktop
 from .given_names import GivenNames
-from .hyprland import Hyprland
 from .namer import Namer
+from .prompts.prompt import Prompt
 
 
 class Rename:
-    def __init__(self, hyprland: Hyprland, by_hand: GivenNames, namer: Namer, ask: Callable[[str], str | None]):
-        self._hyprland = hyprland
+    def __init__(self, desktop: Desktop, by_hand: GivenNames, namer: Namer, prompt: Prompt):
+        self._desktop = desktop
         self._by_hand = by_hand
         self._namer = namer
-        self._ask = ask
+        self._prompt = prompt
 
     def focused_window(self) -> None:
-        window = self._hyprland.active_window()
+        window = self._desktop.active_window()
         if window is None:
             return
-        name = self._ask("Window name (empty for the default)")
+        name = self._prompt.ask("Window name (empty for the default)")
         if name is None:
             return
         if name:
-            self._by_hand.give(window.address, name)
+            self._by_hand.give(window.id, name)
         else:
-            self._by_hand.forget(window.address)
-        self._hyprland.show_text(window.address, self._namer.text_for(window))
+            self._by_hand.forget(window.id)
+        self._desktop.show_text(window.id, self._namer.text_for(window))

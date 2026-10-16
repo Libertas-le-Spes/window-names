@@ -16,12 +16,12 @@ class Namer:
         self._kinds = kinds
 
     def text_for(self, window: Window) -> str:
-        given = (names.name_of(window.address) for names in self._given)
+        given = (names.name_of(window.id) for names in self._given)
         return next(filter(None, given), None) or self._default_for(window)
 
-    def forget(self, address: str) -> None:
+    def forget(self, window_id: str) -> None:
         for names in self._given:
-            names.forget(address)
+            names.forget(window_id)
 
     def _default_for(self, window: Window) -> str:
         return next(kind for kind in self._kinds if kind.matches(window)).name(window)

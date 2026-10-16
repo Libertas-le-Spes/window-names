@@ -7,17 +7,17 @@ class GivenNames:
     def __init__(self, folder: Path):
         self.folder = folder
 
-    def name_of(self, address: str) -> str | None:
+    def name_of(self, window_id: str) -> str | None:
         try:
-            return (self.folder / address).read_text().strip() or None
+            return (self.folder / window_id).read_text().strip() or None
         except OSError:
             return None
 
-    def give(self, address: str, name: str) -> None:
+    def give(self, window_id: str, name: str) -> None:
         self.folder.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile("w", dir=self.folder, prefix=".writing-", delete=False) as written:
             written.write(name.strip() + "\n")
-        os.replace(written.name, self.folder / address)
+        os.replace(written.name, self.folder / window_id)
 
-    def forget(self, address: str) -> None:
-        (self.folder / address).unlink(missing_ok=True)
+    def forget(self, window_id: str) -> None:
+        (self.folder / window_id).unlink(missing_ok=True)

@@ -39,5 +39,5 @@ if hyprbars_loaded() then
   })
 end
 
-o.launch_on_start("window-names run")
-o.bind("SUPER + ALT + R", "Rename window", "window-names rename")
+o.launch_on_start(os.getenv("HOME") .. "/.local/bin/window-names run")
+o.bind("SUPER + ALT + R", "Rename window", os.getenv("HOME") .. "/.local/bin/window-names rename")

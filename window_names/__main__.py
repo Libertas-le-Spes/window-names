@@ -2,18 +2,17 @@ import sys
 from pathlib import Path
 
 from .app_names import AppNames
+from .desktops.desktops import running_desktop
 from .given_names import GivenNames
-from .hyprland import Hyprland
 from .kinds.any_app import AnyApp
 from .kinds.claude_terminal import ClaudeTerminal
 from .kinds.jetbrains import JetBrains
 from .kinds.terminal import Terminal
 from .kinds.web_app import WebApp
-from .menu_prompt import ask_in_menu
 from .namer import Namer
+from .prompts.prompts import first_available
 from .rename import Rename
 from .service import Service
-from .title_bars import TitleBars
 
 STATE = Path.home() / ".local/state"
 BY_HAND = GivenNames(STATE / "window-names-by-hand")
@@ -28,12 +27,12 @@ def namer() -> Namer:
 
 
 def main(command: str = "run") -> None:
-    hyprland = Hyprland()
+    desktop = running_desktop()
     names = namer()
     commands = {
-        "run": lambda: (TitleBars(hyprland).load(), Service(hyprland, names).run()),
-        "rename": lambda: Rename(hyprland, BY_HAND, names, ask_in_menu).focused_window(),
-        "show": lambda: [print(f"{w.address}  {names.text_for(w)}") for w in hyprland.windows()],
+        "run": lambda: Service(desktop, names).run(),
+        "rename": lambda: Rename(desktop, BY_HAND, names, first_available()).focused_window(),
+        "show": lambda: [print(f"{w.id}  {names.text_for(w)}") for w in desktop.windows()],
     }
     commands[command]()
 

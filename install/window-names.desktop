@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Window names
+Comment=Names every window's title so similar windows can be told apart
+Exec=sh -c '"$HOME/.local/bin/window-names" run'
+X-GNOME-Autostart-enabled=true
