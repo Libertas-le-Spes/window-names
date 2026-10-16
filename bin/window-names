@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from window_names.__main__ import main
+
+main(*sys.argv[1:2])
