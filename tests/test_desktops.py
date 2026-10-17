@@ -3,8 +3,10 @@ import time
 import unittest
 from unittest import mock
 
+from tests.fake_hyprland import FakeHyprland
 from tests.fake_i3 import FakeI3
 from window_names.desktops.desktops import running_desktop
+from window_names.desktops.hyprland import Hyprland
 from window_names.desktops.i3 import I3
 from window_names.desktops.i3_ipc import I3Ipc
 from window_names.desktops.sway import Sway
@@ -28,6 +30,32 @@ I3_TREE = {
         ],
     }],
 }
+
+
+class HyprlandTest(unittest.TestCase):
+    def test_text_becomes_the_bars_title(self):
+        hyprland = FakeHyprland()
+        Hyprland(hyprland.runtime).show_text("0x55d1", 'Rider — "onplia"')
+        self.assertEqual(hyprland.requests[0], 'eval hl.plugin.hyprbars.set_title("address:0x55d1", "Rider — \\034onplia\\034")')
+
+    def test_text_is_sent_once(self):
+        hyprland = FakeHyprland()
+        desktop = Hyprland(hyprland.runtime)
+        desktop.show_text("0x55d1", "Rider")
+        desktop.show_text("0x55d1", "Rider")
+        self.assertEqual(len(hyprland.requests), 1)
+
+    def test_backslashes_and_line_breaks_cannot_end_the_lua_string(self):
+        hyprland = FakeHyprland()
+        Hyprland(hyprland.runtime).show_text("0x55d1", "C:\\new\nline")
+        self.assertTrue(hyprland.requests[0].endswith('"C:\\092new\\010line")'))
+
+    def test_a_window_without_a_bar_is_tried_again(self):
+        hyprland = FakeHyprland(reply="error: hl.plugin.hyprbars.set_title: the window has no bar")
+        desktop = Hyprland(hyprland.runtime)
+        self.assertFalse(desktop.show_text("0x55d1", "Rider"))
+        desktop.show_text("0x55d1", "Rider")
+        self.assertEqual(len(hyprland.requests), 2)
 
 
 class SwayTest(unittest.TestCase):

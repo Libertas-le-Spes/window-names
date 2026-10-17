@@ -33,7 +33,11 @@ class Hyprland:
         return self._window(client) if client.get("address") else None
 
     def show_text(self, window_id: str, text: str) -> bool:
-        return self._sent.send(window_id, text, lambda to, shown: self.ask(f"hyprbars-text {to} {shown}") == "ok")
+        return self._sent.send(window_id, text, self._set_title)
+
+    def _set_title(self, window_id: str, text: str) -> bool:
+        quoted = "".join(f"\\{ord(c):03d}" if ord(c) < 32 or c in '"\\' else c for c in text)
+        return self.ask(f'eval hl.plugin.hyprbars.set_title("address:{window_id}", "{quoted}")') == "ok"
 
     def wait(self, seconds: float) -> None:
         if self._events is None:

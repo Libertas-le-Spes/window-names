@@ -18,7 +18,7 @@ Each desktop shows a name its own way. Only the Hyprland part has run on a real 
 
 | Desktop | Where the name appears | Tested for real |
 |---|---|---|
-| Hyprland | a title bar on every window, drawn by a fork of hyprbars ([Libertas-le-Spes/hyprland-plugins](https://github.com/Libertas-le-Spes/hyprland-plugins), branch `bar-text`) | yes |
+| Hyprland | a title bar on every window, drawn by a fork of hyprbars ([Libertas-le-Spes/hyprland-plugins](https://github.com/Libertas-le-Spes/hyprland-plugins), branch `set-title`, the change offered upstream in [hyprwm/hyprland-plugins#716](https://github.com/hyprwm/hyprland-plugins/pull/716)) | yes |
 | Sway | the window's title bar, through Sway's `title_format` | no |
 | i3 | the window's title bar, through i3's `title_format` | no |
 | Other X11 desktops (XFCE, Cinnamon, MATE, …) | the window's own title, rewritten through `xprop` | no |
